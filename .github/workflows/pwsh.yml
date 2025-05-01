@@ -22,15 +22,17 @@ jobs:
           winrm quickconfig -quiet
 
           # Step 3: Allow unencrypted traffic
-          Set-Item -Path WSMan:\localhost\Client\AllowUnencrypted -Value $true
+          Set-Item -Path WSMan:\localhost\Client\AllowUnencrypted -Value $true -Force
 
           # Step 4: Enable Basic Authentication
-          Set-Item -Path WSMan:\localhost\Client\Auth\Basic -Value $true
+          Set-Item -Path WSMan:\localhost\Client\Auth\Basic -Value $true -Force
 
-          # Step 5: Add VM IP to TrustedHosts (handle empty TrustedHosts)
-          $trustedHosts = Get-Item -Path WSMan:\localhost\Client\TrustedHosts -ErrorAction SilentlyContinue
-          if ($trustedHosts.Value -notlike "*$env:VM_IP*") {
-              Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value "$env:VM_IP" -Concatenate
+          # Step 5: Add VM IP to TrustedHosts (create if missing)
+          $trustedHostsPath = "WSMan:\localhost\Client\TrustedHosts"
+          if (-not (Get-Item -Path $trustedHostsPath -ErrorAction SilentlyContinue)) {
+              New-Item -Path $trustedHostsPath -Value "$env:VM_IP"
+          } else {
+              Set-Item -Path $trustedHostsPath -Value "$env:VM_IP" -Concatenate -Force
           }
 
           # Step 6: Create secure credential
