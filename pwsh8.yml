@@ -1,0 +1,35 @@
+trigger:
+- main
+
+# Set the pool to use a Windows agent
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    steps: 
+    - script: echo "Building app..."
+
+- stage: DeployDev
+  dependsOn: Build
+  displayNa,e
+  jobs:
+  - job: DeployDevJob
+    steps:
+    - task: PowerShell@2
+      inputs: 
+        targetType: 'inline'
+        script: Write-Host "Deploying to dev "
+
+- stage: DeployProd
+  dependsOn: DeployDev
+  condition: succeeded()
+  jobs: 
+  - job: DeployProdJob
+    steps: 
+    - task: PowerShell@2
+      inputs: 
+        targetType: 'inline'
+        script: Write-Host "Deploying to Production"
