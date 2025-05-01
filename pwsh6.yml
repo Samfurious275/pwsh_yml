@@ -1,0 +1,13 @@
+---
+trigger:
+  - main
+pool:
+  vmImage: Windows-latest
+
+steps: 
+- task: PowerShell@2
+  displayName: 'how too install Modules'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Install-Module -Name Az -AllowClobber -Scope CurrentUser

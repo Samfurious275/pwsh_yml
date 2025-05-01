@@ -1,0 +1,18 @@
+---
+trigger:
+  - main
+pool:
+  vmImage: Windows-latest
+
+steps:
+- task: AzurePowerShell@5
+  inputs:
+    azureSubscription: 'subscription id'
+    ScriptType: 'InlineScript'
+    InlineScript: |
+      $resourceGroups = Get-AzResourceGroup
+      foreach ($rg in $resourceGroups) {
+        Write-Host "Resource Group: $($rg.ResourceGroupName)"
+
+
+}

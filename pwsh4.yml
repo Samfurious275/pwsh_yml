@@ -1,0 +1,23 @@
+trigger:
+  main
+
+pool:
+  vmImage: 'Windows-latest0'
+
+variables:
+  greeting: 'Hello'
+  name: 'azure Devops'
+
+steps:
+- task: PowerShell@2
+  displayName: 'Use Variables in powershell yml '
+  inputs:
+    targetType: 'inline'
+    script: |
+      param(
+        [string]$greeting,
+        [string]$name
+
+        )
+        Write-Host "$greeting, $name?"
+    arguments: '-greeting $(greeting) -name $(name)'

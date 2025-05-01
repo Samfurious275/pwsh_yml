@@ -1,0 +1,12 @@
+trigger:
+  main
+
+pool:
+  vmImage: 'Windows-latest'
+
+steps: 
+- task: PowerShell@2
+  displayName: 'how to give path to file'
+  inputs:
+    targetType: 'filePath'
+    filePath: 'scripts/hello.ps1'
