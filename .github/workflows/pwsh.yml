@@ -15,21 +15,32 @@ jobs:
           VM_USER: ${{ secrets.VM_USER }}
           VM_PASSWORD: ${{ secrets.VM_PASSWORD }}
         run: |
-          # Configure WinRM client to allow unencrypted traffic
+          # Step 1: Start WinRM service
+          net start winrm
+
+          # Step 2: Configure WinRM quick config
+          winrm quickconfig -quiet
+
+          # Step 3: Allow unencrypted traffic
           Set-Item -Path WSMan:\localhost\Client\AllowUnencrypted -Value $true
+
+          # Step 4: Enable Basic Authentication
           Set-Item -Path WSMan:\localhost\Client\Auth\Basic -Value $true
 
-          # Add VM to TrustedHosts (optional but recommended)
-          Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value "$env:VM_IP" -Concatenate
+          # Step 5: Add VM IP to TrustedHosts (handle empty TrustedHosts)
+          $trustedHosts = Get-Item -Path WSMan:\localhost\Client\TrustedHosts -ErrorAction SilentlyContinue
+          if ($trustedHosts.Value -notlike "*$env:VM_IP*") {
+              Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value "$env:VM_IP" -Concatenate
+          }
 
-          # Create secure credential
+          # Step 6: Create secure credential
           $password = ConvertTo-SecureString "$env:VM_PASSWORD" -AsPlainText -Force
           $credential = New-Object System.Management.Automation.PSCredential ("$env:VM_USER", $password)
 
-          # Establish WinRM session
+          # Step 7: Establish WinRM session
           $session = New-PSSession -ComputerName "$env:VM_IP" -Port 5985 -Credential $credential -Authentication Basic
 
-          # Run installation commands
+          # Step 8: Run installation commands
           Invoke-Command -Session $session -ScriptBlock {
             Write-Host "Installing Nginx..."
             choco install nginx -y
@@ -46,5 +57,5 @@ jobs:
             cl.exe /?
           }
 
-          # Close session
+          # Step 9: Close session
           Remove-PSSession -Session $session
