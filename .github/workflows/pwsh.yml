@@ -1,0 +1,43 @@
+name: Install Packages on Windows VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  install_packages:
+    runs-on: windows-latest
+    steps:
+      - name: Setup WinRM Session and Install Packages
+        env:
+          VM_IP: ${{ secrets.VM_IP }}
+          VM_USER: ${{ secrets.VM_USER }}
+          VM_PASSWORD: ${{ secrets.VM_PASSWORD }}
+        run: |
+          # Create secure credential
+          $password = ConvertTo-SecureString "$env:VM_PASSWORD" -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential ("$env:VM_USER", $password)
+
+          # Establish WinRM session
+          $session = New-PSSession -ComputerName "$env:VM_IP" -Port 5985 -Credential $credential -Authentication Basic
+
+          # Run installation commands
+          Invoke-Command -Session $session -ScriptBlock {
+            Write-Host "Installing Nginx..."
+            choco install nginx -y
+
+            Write-Host "Installing Python 3..."
+            choco install python -y
+
+            Write-Host "Installing Visual Studio Build Tools (C++)..."
+            choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64" -y
+
+            # Optional: Verify installations
+            nginx -v
+            python --version
+            cl.exe /?
+          }
+
+          # Close session
+          Remove-PSSession -Session $session
