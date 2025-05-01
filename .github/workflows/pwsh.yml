@@ -9,12 +9,19 @@ jobs:
   install_packages:
     runs-on: windows-latest
     steps:
-      - name: Setup WinRM Session and Install Packages
+      - name: Setup WinRM Client and Install Packages
         env:
           VM_IP: ${{ secrets.VM_IP }}
           VM_USER: ${{ secrets.VM_USER }}
           VM_PASSWORD: ${{ secrets.VM_PASSWORD }}
         run: |
+          # Configure WinRM client to allow unencrypted traffic
+          Set-Item -Path WSMan:\localhost\Client\AllowUnencrypted -Value $true
+          Set-Item -Path WSMan:\localhost\Client\Auth\Basic -Value $true
+
+          # Add VM to TrustedHosts (optional but recommended)
+          Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value "$env:VM_IP" -Concatenate
+
           # Create secure credential
           $password = ConvertTo-SecureString "$env:VM_PASSWORD" -AsPlainText -Force
           $credential = New-Object System.Management.Automation.PSCredential ("$env:VM_USER", $password)
